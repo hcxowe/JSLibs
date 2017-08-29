@@ -469,4 +469,3 @@ ret = _.zipWith([1, 2], [10, 20], [100, 200], function(a, b, c) {
 });
 console.log(ret); // [111, 222]
 ```
-
