@@ -196,7 +196,7 @@ console.log(ret); // {a: 1, b: 2}
 
 ### _.intersection(...arrays)
 
-> 返回一个数组，arrays的并集
+> 返回一个数组，arrays的交集
 
 ```js
 ret = _.intersection([1,2,3],[2,3,4],[3,4,5]);
