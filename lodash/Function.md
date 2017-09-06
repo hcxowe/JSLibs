@@ -114,7 +114,7 @@ jQuery(element).on('click', _.debounce(sendMail, 300, {
 
 ### _.delay(func, wait, [args])
 
-> 在延时wait之后嗲勇func
+> 在延时wait之后调用func
 
 ```js
 _.delay(console.log, 1000, 'end');
