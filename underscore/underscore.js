@@ -260,22 +260,17 @@
         };
     };
 
-    // **Reduce** builds up a single result from a list of values, aka `inject`,
-    // or `foldl`.
     _.reduce = _.foldl = _.inject = createReduce(1);
 
-    // The right-associative version of reduce, also known as `foldr`.
     _.reduceRight = _.foldr = createReduce(-1);
 
-    // Return the first value which passes a truth test. Aliased as `detect`.
     _.find = _.detect = function(obj, predicate, context) {
         var keyFinder = isArrayLike(obj) ? _.findIndex : _.findKey;
         var key = keyFinder(obj, predicate, context);
         if (key !== void 0 && key !== -1) return obj[key];
     };
 
-    // Return all the elements that pass a truth test.
-    // Aliased as `select`.
+    // 返回所有 返回true的项
     _.filter = _.select = function(obj, predicate, context) {
         var results = [];
         predicate = cb(predicate, context);
@@ -285,13 +280,11 @@
         return results;
     };
 
-    // Return all the elements for which a truth test fails.
+    // 返回所有 返回 false 的项
     _.reject = function(obj, predicate, context) {
         return _.filter(obj, _.negate(cb(predicate)), context);
     };
 
-    // Determine whether all of the elements match a truth test.
-    // Aliased as `all`.
     _.every = _.all = function(obj, predicate, context) {
         predicate = cb(predicate, context);
         var keys = !isArrayLike(obj) && _.keys(obj),
@@ -303,8 +296,6 @@
         return true;
     };
 
-    // Determine if at least one element in the object matches a truth test.
-    // Aliased as `any`.
     _.some = _.any = function(obj, predicate, context) {
         predicate = cb(predicate, context);
         var keys = !isArrayLike(obj) && _.keys(obj),
@@ -316,15 +307,12 @@
         return false;
     };
 
-    // Determine if the array or object contains a given item (using `===`).
-    // Aliased as `includes` and `include`.
     _.contains = _.includes = _.include = function(obj, item, fromIndex, guard) {
         if (!isArrayLike(obj)) obj = _.values(obj);
         if (typeof fromIndex != 'number' || guard) fromIndex = 0;
         return _.indexOf(obj, item, fromIndex) >= 0;
     };
 
-    // Invoke a method (with arguments) on every item in a collection.
     _.invoke = restArguments(function(obj, path, args) {
         var contextPath, func;
         if (_.isFunction(path)) {
@@ -363,7 +351,7 @@
         return _.find(obj, _.matcher(attrs));
     };
 
-    // Return the maximum element (or element-based computation).
+    // 返回最大的元素
     _.max = function(obj, iteratee, context) {
         var result = -Infinity,
             lastComputed = -Infinity,
@@ -389,7 +377,7 @@
         return result;
     };
 
-    // Return the minimum element (or element-based computation).
+    // 返回最小元素
     _.min = function(obj, iteratee, context) {
         var result = Infinity,
             lastComputed = Infinity,
@@ -415,37 +403,39 @@
         return result;
     };
 
-    // Shuffle a collection.
+    // 集合洗牌
     _.shuffle = function(obj) {
         return _.sample(obj, Infinity);
     };
 
-    // Sample **n** random values from a collection using the modern version of the
-    // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
-    // If **n** is not specified, returns a single random element.
-    // The internal `guard` argument allows it to work with `map`.
+    // 洗牌
     _.sample = function(obj, n, guard) {
+        // 随机返回一个属性值
         if (n == null || guard) {
             if (!isArrayLike(obj)) obj = _.values(obj);
             return obj[_.random(obj.length - 1)];
         }
+
         var sample = isArrayLike(obj) ? _.clone(obj) : _.values(obj);
         var length = getLength(sample);
         n = Math.max(Math.min(n, length), 0);
         var last = length - 1;
+        // 随机交换属性值
         for (var index = 0; index < n; index++) {
             var rand = _.random(index, last);
             var temp = sample[index];
             sample[index] = sample[rand];
             sample[rand] = temp;
         }
+
         return sample.slice(0, n);
     };
 
-    // Sort the object's values by a criterion produced by an iteratee.
+    // 根据 iteratee 排序 obj 属性值
     _.sortBy = function(obj, iteratee, context) {
         var index = 0;
         iteratee = cb(iteratee, context);
+
         return _.pluck(_.map(obj, function(value, key, list) {
             return {
                 value: value,
@@ -463,7 +453,7 @@
         }), 'value');
     };
 
-    // An internal function used for aggregate "group by" operations.
+    // 内部函数, 根据 behavior 决定返回函数用途
     var group = function(behavior, partition) {
         return function(obj, iteratee, context) {
             var result = partition ? [
@@ -479,48 +469,47 @@
         };
     };
 
-    // Groups the object's values by a criterion. Pass either a string attribute
-    // to group by, or a function that returns the criterion.
+    // 相同 key 的值分组
     _.groupBy = group(function(result, value, key) {
         if (has(result, key)) result[key].push(value);
         else result[key] = [value];
     });
 
-    // Indexes the object's values by a criterion, similar to `groupBy`, but for
-    // when you know that your index values will be unique.
+    // 明确 key 不会重复
     _.indexBy = group(function(result, value, key) {
         result[key] = value;
     });
 
-    // Counts instances of an object that group by a certain criterion. Pass
-    // either a string attribute to count by, or a function that returns the
-    // criterion.
+    // 相同 key 的数量统计
     _.countBy = group(function(result, value, key) {
         if (has(result, key)) result[key]++;
         else result[key] = 1;
     });
 
+    // 这个正则按“|”分割，包含三个部分
+    // [^\ud800 -\udfff] 第一个表示不包含代理对代码点的所有字符
+    // [\ud800 -\udbff]  第二个表示合法的代理对的所有字符
+    // [\udc00 -\udfff][\ud800 -\udfff] 第三个表示代理对的代码点（本身不是合法的Unicode字符）
+    // 所以匹配的结果是分解为字符数组（如果是合法的字符一定会切分正确）
     var reStrSymbol = /[^\ud800-\udfff]|[\ud800-\udbff][\udc00-\udfff]|[\ud800-\udfff]/g;
-    // Safely create a real, live array from anything iterable.
+
+    // 安全地从任何可迭代的对象创建一个真实的、活动的数组
     _.toArray = function(obj) {
         if (!obj) return [];
         if (_.isArray(obj)) return slice.call(obj);
         if (_.isString(obj)) {
-            // Keep surrogate pair characters together
             return obj.match(reStrSymbol);
         }
         if (isArrayLike(obj)) return _.map(obj, _.identity);
         return _.values(obj);
     };
 
-    // Return the number of elements in an object.
     _.size = function(obj) {
         if (obj == null) return 0;
         return isArrayLike(obj) ? obj.length : _.keys(obj).length;
     };
 
-    // Split a collection into two arrays: one whose elements all satisfy the given
-    // predicate, and one whose elements all do not satisfy the predicate.
+    // 将集合分成两个数组:一个数组的元素都满足给定的条件, 一个不满足
     _.partition = group(function(result, value, pass) {
         result[pass ? 0 : 1].push(value);
     }, true);
